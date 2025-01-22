@@ -60,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Timer? _timer;
   int _timeLeft = 10;
   bool _gameActive = false;
+  int _highScore = 0;
 
   void _startGame() {
     setState(() {
@@ -73,6 +74,9 @@ class _MyHomePageState extends State<MyHomePage> {
         if (_timeLeft > 0) {
           _timeLeft--;
         } else {
+          if (_counter > _highScore) {
+            _highScore = _counter;
+          }
           _gameActive = false;
           _timer?.cancel();
         }
@@ -144,6 +148,11 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 20),
             Text(
               'Score: $_counter',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 20), 
+            Text(
+              'High Score: $_highScore',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 20),
