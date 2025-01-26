@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -29,7 +36,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -61,6 +68,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int _timeLeft = 10;
   bool _gameActive = false;
   int _highScore = 0;
+
+  final myController = TextEditingController();
 
   void _startGame() {
     setState(() {
@@ -97,6 +106,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _submitHighScore() {
+    print(myController.text + " " + _highScore.toString());
+  }
   
   @override
   void dispose() {
@@ -164,6 +176,19 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _gameActive ? null : _startGame,
               child: const Text('Start Game'),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: myController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Your name',
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _gameActive ? null : _submitHighScore,
+              child: const Text('Send High Score'),
             ),
           ],
         ),
