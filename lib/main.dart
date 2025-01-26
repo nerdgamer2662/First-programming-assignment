@@ -3,10 +3,11 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const MyApp());
@@ -70,6 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _highScore = 0;
 
   final myController = TextEditingController();
+  CollectionReference high_score_list = FirebaseFirestore.instance.collection("high_scores");
 
   void _startGame() {
     setState(() {
@@ -106,8 +108,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _submitHighScore() {
-    print(myController.text + " " + _highScore.toString());
+  Future<void> _submitHighScore() {
+    return high_score_list.add({
+      'name': myController.text,
+      'score': _highScore,
+    })
+    .then((value) => print("Score Added"))
+    .catchError((error) => print("Failed to add score: $error"));
   }
   
   @override
