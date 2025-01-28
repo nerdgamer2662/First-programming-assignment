@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,7 @@ void main() async {
   );
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -73,6 +75,9 @@ class _MyHomePageState extends State<MyHomePage> {
   final myController = TextEditingController();
   CollectionReference high_score_list = FirebaseFirestore.instance.collection("high_scores");
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
   void _startGame() {
     setState(() {
       _counter = 0;
@@ -108,13 +113,42 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _submitHighScore() {
+  Future<void> _submitHighScore() async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to submit your high score')),
+      );
+      return;
+    }
     return high_score_list.add({
+      'email': user.email,
       'name': myController.text,
       'score': _highScore,
     })
     .then((value) => print("Score Added"))
     .catchError((error) => print("Failed to add score: $error"));
+  }
+  
+    Future<User?> _signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) {
+      return null; 
+    }
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    return userCredential.user;
+  }
+
+  void _signOut() async { // Added for Google Sign-Out
+    await _auth.signOut();
+    await _googleSignIn.signOut();
   }
   
   @override
@@ -196,6 +230,22 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _gameActive ? null : _submitHighScore,
               child: const Text('Send High Score'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton( // Added for Google Sign-In
+              onPressed: () async {
+                User? user = await _signInWithGoogle();
+                if (user != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Signed in as ${user.displayName}')),
+                  );
+                }
+              },
+              child: Text('Sign in with Google'),
+            ),
+            ElevatedButton( // Added for Google Sign-Out
+              onPressed: _signOut,
+              child: Text('Sign out'),
             ),
           ],
         ),
