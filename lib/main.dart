@@ -121,9 +121,11 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       return;
     }
-    return high_score_list.add({
+
+    return high_score_list
+        .doc(myController.text)
+        .set({
       'email': user.email,
-      'name': myController.text,
       'score': _highScore,
     })
     .then((value) => print("Score Added"))
